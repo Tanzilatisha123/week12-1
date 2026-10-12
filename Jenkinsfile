@@ -6,17 +6,17 @@ pipeline {
             steps {
                 echo "Running Selenium Tests using pytest"
 
-                // Install Python dependencies
-                bat 'python -m pip install -r requirements.txt'
+                // Install Python dependencies (use full path)
+                bat '"C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" -m pip install -r requirements.txt'
 
                 // Start Flask app in background
-                bat 'start /B python app.py'
+                bat 'start /B "C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" app.py'
 
                 // Wait for Flask to start
                 bat 'ping 127.0.0.1 -n 5 > nul'
 
                 // Run Selenium tests
-                bat 'python -m pytest -v'
+                bat '"C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" -m pytest -v'
             }
         }
 
