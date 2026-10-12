@@ -1,71 +1,56 @@
 pipeline {
     agent any
-
+   
     stages {
 
-      stage('Run Selenium Tests with pytest') {
-    steps {
-        echo "Running Selenium Tests using pytest"
+        stage('Run Selenium Tests with pytest') {
+            steps {
+                    echo "Running Selenium Tests using pytest"
 
-        // Install Python dependencies
-        bat '"C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" -m pip install -r requirements.txt'
+                    // Install Python dependencies
+                    bat 'pip install -r requirements.txt'
 
-        // Start Flask app in background
-        bat 'start "" /B "C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" app.py'
+                    //  Start Flask app in background
+                    bat 'start /B python app.py'
 
-        // Wait for Flask to start
-        bat 'C:\\Windows\\System32\\ping.exe 127.0.0.1 -n 5 > nul'
+                    // Wait a few seconds for the server to start
+                    bat 'ping 127.0.0.1 -n 5 > nul'
 
-        // Run Selenium tests
-        bat '"C:\\Users\\Tanzila\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" -m pytest -v'
-
-        // Kill Flask after tests
-        bat 'C:\\Windows\\System32\\taskkill.exe /F /IM python.exe'
-    }
-}
-
-
+                    // Run tests using pytest
+                    
+                    bat 'python -m pytest -v'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 echo "Build Docker Image"
-                bat 'docker build -t seleniumdemoapp:v1 .'
+                bat "docker build -t seleniumdemoapp:v1 ."
             }
         }
-
         stage('Docker Login') {
             steps {
-                // Create this in Jenkins: Manage Jenkins > Credentials > Username with password
-                // and give it the ID: dockerhub-creds
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                                  usernameVariable: 'DOCKER_USER',
-                                                  passwordVariable: 'DOCKER_PASS')]) {
-                    bat 'echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin'
+                  bat 'docker login -u sumayyasadaf -p Sumayya@123'
                 }
             }
-        }
-
-        stage('Push Docker Image to Docker Hub') {
+        stage('push Docker Image to Docker Hub') {
             steps {
-                echo "Push Docker Image to Docker Hub"
-                bat 'docker tag seleniumdemoapp:v1 tanzila123/selenium:seleniumtestimage'
-                bat 'docker push tanzila123/selenium:seleniumtestimage'
+                echo "push Docker Image to Docker Hub"
+                bat "docker tag seleniumdemoapp:v1 sumayyasadaf/sample2026:seleniumtestimage"               
+                    
+                bat "docker push sumayyasadaf/sample2026:seleniumtestimage"
+                
             }
         }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                bat 'kubectl apply -f deployment.yaml --validate=false'
-                bat 'kubectl apply -f service.yaml'
-            }
+        stage('Deploy to Kubernetes') { 
+            steps { 
+                    // apply deployment & service 
+                    bat 'kubectl apply -f deployment.yaml --validate=false' 
+                    bat 'kubectl apply -f service.yaml' 
+            } 
         }
     }
-
     post {
-        always {
-            // Stop the background Flask app so port 5000 is free for the next run
-            bat(returnStatus: true, script: 'taskkill /F /IM python.exe')
-        }
         success {
             echo 'Pipeline completed successfully!'
         }
